@@ -1,5 +1,12 @@
 .App {
   text-align: center;
+  background-color: #FFFFF5;
+  height: 100vh;
+  border-color: #FFFFF5;
+  font: 'arial';
+}
+h1{
+  margin: 0;
 }
 
 .App-logo {
