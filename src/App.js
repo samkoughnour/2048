@@ -113,7 +113,7 @@ function App() {
           zeroCount++
         } 
     }}
-    if(JSON.stringify(placeholderBoard)==JSON.stringify(shiftBoard(keyCode, placeholderBoard)) && zeroCount !== 16){
+    if(JSON.stringify(placeholderBoard)==JSON.stringify(shiftBoard(keyCode, placeholderBoard)) && zeroCount !== placeholderBoard.length*placeholderBoard[0].length){
       return(true)
     }
   }
