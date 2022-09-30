@@ -1,29 +1,55 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import './App.css';
 import Gameboard from './Gameboard';
+import Header from './Header';
 
 
 function App() {
-  const [board, setBoard] = useState([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]])
-  const [score, setScore] = useState(0)
-  const [gameAlive, setGameAlive] = useState(true)
-  for(var i = 3; i>-1; i--) {
+  //[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]
+  //[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]
+  const [rows, setRows] = useState(4)
+  const [columns, setColumns] = useState(4)
+
+  const generateBoard = (rows, columns) => {
+    let newBoard = []
+    for(let i = 0; i<rows; i++) {
+      newBoard.push([])
+      for(let j = 0; j<columns;j++){
+        newBoard[i].push(0)
+      }
+    }
+    return(newBoard)
   }
+  
+  const [initialBoard, setInitialBoard] = useState(generateBoard(rows,columns))
+  const [board, setBoard] = useState(initialBoard)
+  const [gameAlive, setGameAlive] = useState(true)
+
+  useEffect(()=>{
+    setInitialBoard(generateBoard(rows,columns))
+  },[rows,columns])
+
+  var transpose = (placeholderBoard) => {
+
+    const result = [];
+  
+    for (let i = 0; i < placeholderBoard[0].length; i++) {
+      const col = []
+      for (let j = 0; j < placeholderBoard.length; j++) {
+        col.push(placeholderBoard[j][i]);
+      }
+      result.push(col)
+    }
+  
+    return result
+  };
+
   const detectCollision = (direction, placeholderBoard) =>{
-    let zeroCount = 0
-    for(let i = 0; i< 4; i++) {
-      for(let j = 0; j< 4; j++) {
-        if (placeholderBoard[i][j] === 0){
-          zeroCount++
-        }
-      
-    }}
     if(direction === 37){
-      for(let i = 0; i< 4; i++) {
+      for(let i = 0; i< placeholderBoard.length; i++) {
         let last = placeholderBoard[i][0]
-        for(let j = 1; j< 4; j++) {
+        for(let j = 1; j< placeholderBoard[0].length; j++) {
           if (placeholderBoard[i][j] === last) {
-            setScore(score + placeholderBoard[i][j-1]*2)
             placeholderBoard[i][j-1] = placeholderBoard[i][j-1]*2
             placeholderBoard[i][j] = 0
             last = null
@@ -32,11 +58,10 @@ function App() {
           }
       }}
     } else if(direction === 39){
-      for(let i = 0; i< 4; i++) {
-        let last = placeholderBoard[i][3]
-        for(let j = 2; j> -1; j--) {
+      for(let i = 0; i< placeholderBoard.length; i++) {
+        let last = placeholderBoard[i][placeholderBoard[0].length-1]
+        for(let j = placeholderBoard[0].length-2; j> -1; j--) {
           if (placeholderBoard[i][j] === last) {
-            setScore(score + placeholderBoard[i][j+1]*2)
             placeholderBoard[i][j+1] = placeholderBoard[i][j+1]*2
             placeholderBoard[i][j] = 0
 
@@ -48,11 +73,10 @@ function App() {
       }}
     } else if(direction === 38){
       placeholderBoard = placeholderBoard[0].map((_, colIndex) => placeholderBoard.map(row => row[colIndex]));
-      for(let i = 0; i< 4; i++) {
+      for(let i = 0; i< placeholderBoard.length; i++) {
         let last = placeholderBoard[i][0]
-        for(let j = 1; j< 4; j++) {
+        for(let j = 1; j< placeholderBoard[0].length; j++) {
           if (placeholderBoard[i][j] === last) {
-            setScore(score + placeholderBoard[i][j-1]*2)
             placeholderBoard[i][j-1] = placeholderBoard[i][j-1]*2
             placeholderBoard[i][j] = 0
             last = null
@@ -64,11 +88,10 @@ function App() {
       placeholderBoard = placeholderBoard[0].map((_, colIndex) => placeholderBoard.map(row => row[colIndex]));
     } else if(direction === 40){
       placeholderBoard = placeholderBoard[0].map((_, colIndex) => placeholderBoard.map(row => row[colIndex]));
-      for(let i = 0; i< 4; i++) {
-        let last = placeholderBoard[i][3]
-        for(let j = 2; j> -1; j--) {
+      for(let i = 0; i< placeholderBoard.length; i++) {
+        let last = placeholderBoard[i][placeholderBoard[0].length-1]
+        for(let j = placeholderBoard[0].length-2; j> -1; j--) {
           if (placeholderBoard[i][j] === last) {
-            setScore(score + placeholderBoard[i][j+1]*2)
             placeholderBoard[i][j+1] = placeholderBoard[i][j+1]*2
             placeholderBoard[i][j] = 0
             last = null
@@ -81,27 +104,41 @@ function App() {
     }
     return(placeholderBoard)
   }
+  
+  const checkStill = (placeholderBoard,keyCode) => {
+    let zeroCount = 0
+    for(let i = 0; i< placeholderBoard.length; i++) {
+      for(let j = 0; j< placeholderBoard[0].length; j++) {
+        if (placeholderBoard[i][j] === 0) {
+          zeroCount++
+        } 
+    }}
+    if(JSON.stringify(placeholderBoard)==JSON.stringify(shiftBoard(keyCode, placeholderBoard)) && zeroCount !== 16){
+      return(true)
+    }
+  }
 
   const populate = (placeholderBoard, keyCode) => {
     if (keyCode === 37 || keyCode === 38 || keyCode === 39 || keyCode === 40) {
       const getRandomInt = (max) => {
         return Math.floor(Math.random() * max);
       }
+      let total = placeholderBoard[0].length*placeholderBoard.length
       let positions = []
       let zeroCount = 0
-      for(let i = 0; i< 4; i++) {
-        for(let j = 0; j< 4; j++) {
+      for(let i = 0; i< placeholderBoard.length; i++) {
+        for(let j = 0; j< placeholderBoard[0].length; j++) {
           if (placeholderBoard[i][j] === 0){
             zeroCount++
             positions.push([i,j])
           }
         
       }}
-      if (zeroCount === 16) {
-        let position1 = getRandomInt(16)
-        let position2 = getRandomInt(16)
+      if (zeroCount === total) {
+        let position1 = getRandomInt(total)
+        let position2 = getRandomInt(total)
         while(position1 === position2){
-          position2 = getRandomInt(16)
+          position2 = getRandomInt(total)
         }
         let valueChance1 = getRandomInt(10)
         let valueChance2 = getRandomInt(10)
@@ -146,11 +183,10 @@ function App() {
         
       }
     } else if(direction === 39) {
-      
       for(let i = 0; i< placeholderBoard.length; i++) {
         let newRow = []
         let zeroArray = []
-        for(let j = 0; j< placeholderBoard.length; j++) {
+        for(let j = 0; j< placeholderBoard[0].length; j++) {
           if (placeholderBoard[i][j] !== 0){
             newRow.push(placeholderBoard[i][j])
           } else {
@@ -160,7 +196,7 @@ function App() {
         placeholderBoard[i] = zeroArray.concat(newRow)
       }
     } else if(direction === 40) {
-      let output = placeholderBoard[0].map((_, colIndex) => placeholderBoard.map(row => row[colIndex]));
+      let output = transpose(placeholderBoard.slice(0))
       for(let i = 0; i< output.length; i++) {
         let newRow = []
         let zeroArray = []
@@ -173,9 +209,9 @@ function App() {
         }
         output[i] = zeroArray.concat(newRow) 
       }
-      placeholderBoard = output.map((_, colIndex) => output.map(row => row[colIndex]));
+      placeholderBoard = transpose(output.slice(0));
     } else if(direction === 38) {
-      let output = placeholderBoard[0].map((_, colIndex) => placeholderBoard.map(row => row[colIndex]));
+      let output = transpose(placeholderBoard.slice(0));
       for(let i = 0; i< output.length; i++) {
         let newRow = []
         let zeroArray = []
@@ -188,7 +224,7 @@ function App() {
         }
         output[i] = newRow.concat(zeroArray) 
       }
-      placeholderBoard = output.map((_, colIndex) => output.map(row => row[colIndex]));
+      placeholderBoard = transpose(output.slice(0));
     }
     return(placeholderBoard)
   }
@@ -196,31 +232,29 @@ function App() {
   const checkAlive = (placeholderBoard) => {
     let zeroCount = 0
     let collisionHappened = false 
-    for(let i = 0; i< 4; i++) {
-      for(let j = 0; j< 4; j++) {
+    for(let i = 0; i< placeholderBoard.length; i++) {
+      for(let j = 0; j< placeholderBoard[0].length; j++) {
         if (placeholderBoard[i][j] === 0) {
           zeroCount++
         } 
     }}
-    for(let i = 0; i< 4; i++) {
+    for(let i = 0; i< placeholderBoard.length; i++) {
       let last = placeholderBoard[i][0]
-      for(let j = 1; j< 4; j++) {
+      for(let j = 1; j< placeholderBoard[0].length; j++) {
         if (placeholderBoard[i][j] === last && last !== 0) {
           collisionHappened = true
         } 
         last = placeholderBoard[i][j]
     }}
     placeholderBoard = placeholderBoard[0].map((_, colIndex) => placeholderBoard.map(row => row[colIndex]));
-    for(let i = 0; i< 4; i++) {
+    for(let i = 0; i< placeholderBoard.length; i++) {
       let last = placeholderBoard[i][0]
-      for(let j = 1; j< 4; j++) {
+      for(let j = 1; j< placeholderBoard[0].length; j++) {
         if (placeholderBoard[i][j] === last && last !== 0) {
           collisionHappened = true
         } 
         last = placeholderBoard[i][j]
     }}
-    console.log(collisionHappened)
-    console.log(zeroCount)
     if(!collisionHappened && zeroCount === 0){
       setGameAlive(false)
     }
@@ -230,10 +264,13 @@ function App() {
   const move = (e) =>{
     if(e.keyCode === 37 || e.keyCode === 38 || e.keyCode === 39 || e.keyCode === 40){
       let placeholderBoard = board.slice(0)
+      let still = checkStill(placeholderBoard, e.keyCode)
       placeholderBoard = shiftBoard(e.keyCode, placeholderBoard)
       placeholderBoard = detectCollision(e.keyCode, placeholderBoard)
       placeholderBoard = shiftBoard(e.keyCode, placeholderBoard)
-      placeholderBoard = populate(placeholderBoard, e.keyCode)
+      if (!still){
+        placeholderBoard = populate(placeholderBoard, e.keyCode)
+      }
       checkAlive(placeholderBoard)
       setBoard(placeholderBoard)
     }
@@ -241,17 +278,27 @@ function App() {
   }
 
   const restart = () =>{
-    setBoard([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]])
-    setScore(0)
+    setBoard(initialBoard)
     setGameAlive(true)
   }
 
-
+  const changeSize = (id) => {
+    if (id === 1) {
+      setRows(rows+1)
+    } else if(id === 2) {
+      setRows(rows - 1)
+    } else if(id === 3) {
+      setColumns(columns+1)
+    } else if(id === 4) {
+      setColumns(columns - 1)
+    }
+  }
 
   return (
     <div className="App">
       <div>
-        <Gameboard move = {move} board={board} restart= {restart} score={score} gameAlive={gameAlive}/>
+        <Header restart={restart} changeSize={changeSize} gameAlive={gameAlive} />
+        <Gameboard move = {move} board={board} restart= {restart} gameAlive={gameAlive}/>
       </div>
     </div>
   );

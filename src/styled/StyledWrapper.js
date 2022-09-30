@@ -1,11 +1,12 @@
 import styled from "styled-components";
 
 const StyledWrapper = styled.div`
-    height: 450px;
-    width: 450px;
+    height: auto;
+    width: auto;
     background-color: ivory;
     border-radius: 10px ;
     margin: auto;
+    float: center;
     border-width: 1px;
     outline-width: 0;
 `
